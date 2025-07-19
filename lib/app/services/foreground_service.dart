@@ -1,17 +1,11 @@
 import 'dart:io';
 import 'dart:isolate';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:lksms_app/app/services/sms_task_handler.dart';
-import 'package:permission_handler/permission_handler.dart';
 
-import '../data/models/pending_task.dart';
 import '../utils/constants.dart';
 import '../utils/logger.dart';
-import '../data/models/report_request.dart';
-import '../data/repositories/settings_repository.dart';
-import 'api_client.dart';
 import 'isolate_communication_service.dart';
 
 class ForegroundService extends GetxService {

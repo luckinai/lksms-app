@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import '../controllers/home_controller.dart';
 import '../widgets/control_panel_widget.dart';
-import '../../layout/controllers/layout_controller.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});

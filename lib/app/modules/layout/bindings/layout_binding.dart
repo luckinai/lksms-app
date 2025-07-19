@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 
 import '../controllers/layout_controller.dart';
 import '../../home/controllers/home_controller.dart';
-import '../../tasks/controllers/tasks_controller.dart';
 import '../../statistics/controllers/statistics_controller.dart';
 
 class LayoutBinding extends Bindings {

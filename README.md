@@ -272,8 +272,8 @@ Response:
   "data": {
     "tasks": [
       {
-        "taskId": "string",
-        "phoneNumber": "string",
+        "task_id": "string",
+        "phone_number": "string",
         "content": "string"
       }
     ]
@@ -288,11 +288,11 @@ Authorization: Basic {base64(username:password)}
 Content-Type: application/json
 
 {
-  "taskId": "string",
-  "appId": "string",
+  "task_id": "string",
+  "app_id": "string",
   "status": "success|failed",
-  "errorMessage": "string",
-  "shouldRetry": true|false
+  "error_message": "string",
+  "should_retry": true|false
 }
 ```
 
@@ -306,10 +306,11 @@ Response:
   "code": 200,
   "message": "success",
   "data": {
-    "pendingNewTasks": 10,
-    "pendingRetryTasks": 5,
-    "processingTasks": 2,
-    "failedTasks": 1
+    "pending_new_tasks": 0,
+    "pending_retry_tasks": 0,
+    "processing_tasks": 0,
+    "success_tasks": 0,
+    "failed_tasks": 0
   }
 }
 ```
