@@ -1,0 +1,1151 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LKSMS Service",
+    "description": "短信发送任务服务",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/sms/send": {
+      "post": {
+        "tags": [
+          "短信服务"
+        ],
+        "summary": "Send Sms",
+        "description": "提交短信发送任务",
+        "operationId": "send_sms_api_v1_sms_send_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_SmsResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/sms/task/{task_id}": {
+      "get": {
+        "tags": [
+          "短信服务"
+        ],
+        "summary": "Get Task",
+        "description": "查询任务状态",
+        "operationId": "get_task_api_v1_sms_task__task_id__get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TaskQueryResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sms/tasks/pending": {
+      "get": {
+        "tags": [
+          "短信服务"
+        ],
+        "summary": "Get Pending Tasks",
+        "description": "获取待发送任务（并发安全）",
+        "operationId": "get_pending_tasks_api_v1_sms_tasks_pending_get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "APP标识",
+              "title": "App Id"
+            },
+            "description": "APP标识"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "获取数量限制",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "获取数量限制"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_PendingTasksResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sms/report": {
+      "post": {
+        "tags": [
+          "短信服务"
+        ],
+        "summary": "Report Result",
+        "description": "汇报发送结果",
+        "operationId": "report_result_api_v1_sms_report_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_NoneType_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/template": {
+      "post": {
+        "tags": [
+          "管理接口"
+        ],
+        "summary": "Create Template",
+        "description": "创建短信模板",
+        "operationId": "create_template_api_v1_admin_template_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TemplateResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/default-sms": {
+      "post": {
+        "tags": [
+          "管理接口"
+        ],
+        "summary": "Create Default Sms",
+        "description": "添加默认短信内容",
+        "operationId": "create_default_sms_api_v1_admin_default_sms_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DefaultSmsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_DefaultSmsResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/recover-zombie-tasks": {
+      "post": {
+        "tags": [
+          "管理接口"
+        ],
+        "summary": "Recover Zombie Tasks",
+        "description": "手动恢复僵尸任务",
+        "operationId": "recover_zombie_tasks_api_v1_admin_recover_zombie_tasks_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ZombieTaskRecoveryResponse_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/task-statistics": {
+      "get": {
+        "tags": [
+          "管理接口"
+        ],
+        "summary": "Get Task Statistics",
+        "description": "获取任务统计信息",
+        "operationId": "get_task_statistics_api_v1_admin_task_statistics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_TaskStatisticsResponse_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/task-status-info": {
+      "get": {
+        "tags": [
+          "管理接口"
+        ],
+        "summary": "Get Task Status Info",
+        "description": "获取任务状态信息",
+        "operationId": "get_task_status_info_api_v1_admin_task_status_info_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_List_TaskStatusInfo__"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "description": "根路径",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "健康检查",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiResponse_DefaultSmsResponse_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DefaultSmsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[DefaultSmsResponse]"
+      },
+      "ApiResponse_List_TaskStatusInfo__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TaskStatusInfo"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[List[TaskStatusInfo]]"
+      },
+      "ApiResponse_NoneType_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "type": "null",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[NoneType]"
+      },
+      "ApiResponse_PendingTasksResponse_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PendingTasksResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[PendingTasksResponse]"
+      },
+      "ApiResponse_SmsResponse_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SmsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[SmsResponse]"
+      },
+      "ApiResponse_TaskQueryResponse_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskQueryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[TaskQueryResponse]"
+      },
+      "ApiResponse_TaskStatisticsResponse_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskStatisticsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[TaskStatisticsResponse]"
+      },
+      "ApiResponse_TemplateResponse_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TemplateResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[TemplateResponse]"
+      },
+      "ApiResponse_ZombieTaskRecoveryResponse_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 200
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "success"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ZombieTaskRecoveryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ApiResponse[ZombieTaskRecoveryResponse]"
+      },
+      "DefaultSmsRequest": {
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 11,
+            "title": "Phone Number",
+            "description": "手机号码"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Content",
+            "description": "默认发送内容"
+          },
+          "use_template": {
+            "type": "boolean",
+            "title": "Use Template",
+            "description": "是否使用模板",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone_number",
+          "content"
+        ],
+        "title": "DefaultSmsRequest",
+        "description": "默认短信内容请求"
+      },
+      "DefaultSmsResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "记录ID"
+          },
+          "phone_number": {
+            "type": "string",
+            "title": "Phone Number",
+            "description": "手机号码"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "默认发送内容"
+          },
+          "use_template": {
+            "type": "boolean",
+            "title": "Use Template",
+            "description": "是否使用模板"
+          },
+          "is_sent": {
+            "type": "boolean",
+            "title": "Is Sent",
+            "description": "是否已发送"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "phone_number",
+          "content",
+          "use_template",
+          "is_sent"
+        ],
+        "title": "DefaultSmsResponse",
+        "description": "默认短信响应"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PendingTaskResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "description": "任务ID"
+          },
+          "phone_number": {
+            "type": "string",
+            "title": "Phone Number",
+            "description": "手机号码"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "发送内容"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "phone_number",
+          "content"
+        ],
+        "title": "PendingTaskResponse",
+        "description": "待处理任务响应"
+      },
+      "PendingTasksResponse": {
+        "properties": {
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "获取到的任务总数"
+          },
+          "app_id": {
+            "type": "string",
+            "title": "App Id",
+            "description": "请求的APP ID"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PendingTaskResponse"
+            },
+            "type": "array",
+            "title": "Tasks",
+            "description": "任务列表"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_count",
+          "app_id",
+          "tasks"
+        ],
+        "title": "PendingTasksResponse",
+        "description": "待处理任务列表响应"
+      },
+      "ReportRequest": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "description": "任务ID"
+          },
+          "app_id": {
+            "type": "string",
+            "title": "App Id",
+            "description": "APP标识"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status",
+            "description": "发送状态: 2=SUCCESS, 3=FAILED"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "错误信息（失败时）"
+          },
+          "should_retry": {
+            "type": "boolean",
+            "title": "Should Retry",
+            "description": "是否应该重试（由APP判断）",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "app_id",
+          "status"
+        ],
+        "title": "ReportRequest",
+        "description": "发送结果汇报请求"
+      },
+      "SmsRequest": {
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 11,
+            "title": "Phone Number",
+            "description": "手机号码"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content",
+            "description": "发送内容或模板参数"
+          },
+          "use_template": {
+            "type": "boolean",
+            "title": "Use Template",
+            "description": "是否使用模板",
+            "default": false
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "来源标识"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone_number"
+        ],
+        "title": "SmsRequest",
+        "description": "短信发送请求"
+      },
+      "SmsResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "description": "任务ID"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status",
+            "description": "任务状态"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "status"
+        ],
+        "title": "SmsResponse",
+        "description": "短信发送响应"
+      },
+      "TaskQueryResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "description": "任务ID"
+          },
+          "phone_number": {
+            "type": "string",
+            "title": "Phone Number",
+            "description": "手机号码"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "发送内容"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status",
+            "description": "任务状态"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "创建时间"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At",
+            "description": "发送时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "phone_number",
+          "content",
+          "status",
+          "created_at"
+        ],
+        "title": "TaskQueryResponse",
+        "description": "任务查询响应"
+      },
+      "TaskStatisticsResponse": {
+        "properties": {
+          "pending_new_tasks": {
+            "type": "integer",
+            "title": "Pending New Tasks",
+            "description": "待处理新任务数量（retry_count=0）"
+          },
+          "pending_retry_tasks": {
+            "type": "integer",
+            "title": "Pending Retry Tasks",
+            "description": "待处理重试任务数量（retry_count>0）"
+          },
+          "processing_tasks": {
+            "type": "integer",
+            "title": "Processing Tasks",
+            "description": "正在处理任务数量"
+          },
+          "success_tasks": {
+            "type": "integer",
+            "title": "Success Tasks",
+            "description": "成功任务数量"
+          },
+          "failed_tasks": {
+            "type": "integer",
+            "title": "Failed Tasks",
+            "description": "失败任务数量"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pending_new_tasks",
+          "pending_retry_tasks",
+          "processing_tasks",
+          "success_tasks",
+          "failed_tasks"
+        ],
+        "title": "TaskStatisticsResponse",
+        "description": "任务统计响应"
+      },
+      "TaskStatusInfo": {
+        "properties": {
+          "status_code": {
+            "type": "integer",
+            "title": "Status Code",
+            "description": "状态码"
+          },
+          "status_name": {
+            "type": "string",
+            "title": "Status Name",
+            "description": "状态名称"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "状态描述"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status_code",
+          "status_name",
+          "description"
+        ],
+        "title": "TaskStatusInfo",
+        "description": "任务状态信息"
+      },
+      "TemplateRequest": {
+        "properties": {
+          "template_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Template Name",
+            "description": "模板名称"
+          },
+          "template_content": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Template Content",
+            "description": "模板内容，支持{param}占位符"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template_name",
+          "template_content"
+        ],
+        "title": "TemplateRequest",
+        "description": "模板创建请求"
+      },
+      "TemplateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "模板ID"
+          },
+          "template_name": {
+            "type": "string",
+            "title": "Template Name",
+            "description": "模板名称"
+          },
+          "template_content": {
+            "type": "string",
+            "title": "Template Content",
+            "description": "模板内容"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "是否启用"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "template_name",
+          "template_content",
+          "is_active"
+        ],
+        "title": "TemplateResponse",
+        "description": "模板响应"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ZombieTaskRecoveryResponse": {
+        "properties": {
+          "recovered_count": {
+            "type": "integer",
+            "title": "Recovered Count",
+            "description": "恢复的任务数量"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "恢复结果消息"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recovered_count",
+          "message"
+        ],
+        "title": "ZombieTaskRecoveryResponse",
+        "description": "僵尸任务恢复响应"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBasic": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  }
+}

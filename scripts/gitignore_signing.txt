@@ -1,0 +1,20 @@
+# 将以下内容添加到 .gitignore 文件中，防止签名文件被提交到版本控制
+
+# Android 签名文件 - 重要：不要提交到版本控制！
+android/key.properties
+android/app/*.jks
+android/app/*.keystore
+*.jks
+*.keystore
+
+# 构建产物
+build/release/
+*.apk
+*.aab
+lksms-debug.apk
+
+# ProGuard mapping 文件（可选择性提交）
+android/app/build/outputs/mapping/
+
+# 本地配置文件
+local.properties
