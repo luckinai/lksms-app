@@ -30,10 +30,25 @@ class MainActivity: FlutterActivity() {
     private var smsTimeout: Runnable? = null
     private val handler = Handler(Looper.getMainLooper())
 
+    // 长短信状态跟踪
+    private var multipartSmsStatus = mutableMapOf<String, MultipartSmsTracker>()
+
+    // 长短信跟踪器
+    data class MultipartSmsTracker(
+        val totalParts: Int,
+        var sentParts: Int = 0,
+        var failedParts: Int = 0,
+        var deliveredParts: Int = 0,
+        val phoneNumber: String,
+        val originalMessage: String
+    )
+
     // 短信发送状态常量
     companion object {
         const val SMS_SENT_ACTION = "SMS_SENT"
         const val SMS_DELIVERED_ACTION = "SMS_DELIVERED"
+        const val MULTIPART_SMS_SENT_ACTION = "MULTIPART_SMS_SENT"
+        const val MULTIPART_SMS_DELIVERED_ACTION = "MULTIPART_SMS_DELIVERED"
     }
 
     // 短信状态广播接收器
@@ -48,7 +63,7 @@ class MainActivity: FlutterActivity() {
                     when (resultCode) {
                         Activity.RESULT_OK -> {
                             sendSmsStatusToFlutter("sent", "短信发送成功", true)
-                            smsResult?.success(hashMapOf(
+                            smsResult?.success(hashMapOf<String, Any>(
                                 "success" to true,
                                 "message" to "短信发送成功",
                                 "status" to "sent"
@@ -57,7 +72,7 @@ class MainActivity: FlutterActivity() {
                         SmsManager.RESULT_ERROR_GENERIC_FAILURE -> {
                             val errorMsg = "发送失败：通用错误"
                             sendSmsStatusToFlutter("failed", errorMsg, false)
-                            smsResult?.success(hashMapOf(
+                            smsResult?.success(hashMapOf<String, Any>(
                                 "success" to false,
                                 "message" to errorMsg,
                                 "errorCode" to "GENERIC_FAILURE"
@@ -66,7 +81,7 @@ class MainActivity: FlutterActivity() {
                         SmsManager.RESULT_ERROR_NO_SERVICE -> {
                             val errorMsg = "发送失败：无服务"
                             sendSmsStatusToFlutter("failed", errorMsg, false)
-                            smsResult?.success(hashMapOf(
+                            smsResult?.success(hashMapOf<String, Any>(
                                 "success" to false,
                                 "message" to errorMsg,
                                 "errorCode" to "NO_SERVICE"
@@ -75,7 +90,7 @@ class MainActivity: FlutterActivity() {
                         SmsManager.RESULT_ERROR_NULL_PDU -> {
                             val errorMsg = "发送失败：PDU为空"
                             sendSmsStatusToFlutter("failed", errorMsg, false)
-                            smsResult?.success(hashMapOf(
+                            smsResult?.success(hashMapOf<String, Any>(
                                 "success" to false,
                                 "message" to errorMsg,
                                 "errorCode" to "NULL_PDU"
@@ -84,7 +99,7 @@ class MainActivity: FlutterActivity() {
                         SmsManager.RESULT_ERROR_RADIO_OFF -> {
                             val errorMsg = "发送失败：无线电关闭"
                             sendSmsStatusToFlutter("failed", errorMsg, false)
-                            smsResult?.success(hashMapOf(
+                            smsResult?.success(hashMapOf<String, Any>(
                                 "success" to false,
                                 "message" to errorMsg,
                                 "errorCode" to "RADIO_OFF"
@@ -93,7 +108,7 @@ class MainActivity: FlutterActivity() {
                         else -> {
                             val errorMsg = "发送失败：用户拒绝或未知错误 (code: $resultCode)"
                             sendSmsStatusToFlutter("failed", errorMsg, false)
-                            smsResult?.success(hashMapOf(
+                            smsResult?.success(hashMapOf<String, Any>(
                                 "success" to false,
                                 "message" to errorMsg,
                                 "errorCode" to "USER_DENIED_OR_UNKNOWN"
@@ -111,6 +126,12 @@ class MainActivity: FlutterActivity() {
                             sendSmsStatusToFlutter("failed", "短信送达失败", false)
                         }
                     }
+                }
+                MULTIPART_SMS_SENT_ACTION -> {
+                    handleMultipartSmsSent(intent, resultCode)
+                }
+                MULTIPART_SMS_DELIVERED_ACTION -> {
+                    handleMultipartSmsDelivered(intent, resultCode)
                 }
             }
         }
@@ -173,6 +194,8 @@ class MainActivity: FlutterActivity() {
         val intentFilter = IntentFilter().apply {
             addAction(SMS_SENT_ACTION)
             addAction(SMS_DELIVERED_ACTION)
+            addAction(MULTIPART_SMS_SENT_ACTION)
+            addAction(MULTIPART_SMS_DELIVERED_ACTION)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -232,7 +255,7 @@ class MainActivity: FlutterActivity() {
                 permissionResult = null
 
                 // 同时通知 Flutter 权限结果（用于回调监听）
-                methodChannel.invokeMethod("onPermissionResult", hashMapOf(
+                methodChannel.invokeMethod("onPermissionResult", hashMapOf<String, Any>(
                     "permission" to "SEND_SMS",
                     "granted" to granted
                 ))
@@ -247,7 +270,7 @@ class MainActivity: FlutterActivity() {
         try {
             // 检查权限
             if (!checkSmsPermission()) {
-                result.success(hashMapOf(
+                result.success(hashMapOf<String, Any>(
                     "success" to false,
                     "message" to "没有短信发送权限",
                     "errorCode" to "NO_PERMISSION"
@@ -285,12 +308,46 @@ class MainActivity: FlutterActivity() {
             )
 
             // 检查短信长度，如果超过160字符则分段发送
-            if (message.length > 160) {
-                val parts = smsManager.divideMessage(message)
+            val parts = smsManager.divideMessage(message)
+            if (parts.size > 1) {
+                // 长短信处理
+                val trackerId = "${phoneNumber}_${System.currentTimeMillis()}"
+                multipartSmsStatus[trackerId] = MultipartSmsTracker(
+                    totalParts = parts.size,
+                    phoneNumber = phoneNumber,
+                    originalMessage = message
+                )
+
                 val sentIntents = ArrayList<PendingIntent>()
                 val deliveredIntents = ArrayList<PendingIntent>()
 
                 for (i in parts.indices) {
+                    val sentIntent = PendingIntent.getBroadcast(
+                        this, i,
+                        Intent(MULTIPART_SMS_SENT_ACTION).apply {
+                            putExtra("trackerId", trackerId)
+                            putExtra("partIndex", i)
+                        },
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        } else {
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                        }
+                    )
+
+                    val deliveredIntent = PendingIntent.getBroadcast(
+                        this, i,
+                        Intent(MULTIPART_SMS_DELIVERED_ACTION).apply {
+                            putExtra("trackerId", trackerId)
+                            putExtra("partIndex", i)
+                        },
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        } else {
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                        }
+                    )
+
                     sentIntents.add(sentIntent)
                     deliveredIntents.add(deliveredIntent)
                 }
@@ -298,7 +355,15 @@ class MainActivity: FlutterActivity() {
                 smsManager.sendMultipartTextMessage(
                     phoneNumber, null, parts, sentIntents, deliveredIntents
                 )
+
+                // 通知Flutter开始发送长短信
+                sendSmsStatusToFlutter("sending", "正在发送长短信 (${parts.size}段)", true, hashMapOf<String, Any>(
+                    "isMultipart" to true,
+                    "totalParts" to parts.size,
+                    "trackerId" to trackerId
+                ))
             } else {
+                // 普通短信处理
                 smsManager.sendTextMessage(
                     phoneNumber, null, message, sentIntent, deliveredIntent
                 )
@@ -306,7 +371,7 @@ class MainActivity: FlutterActivity() {
 
             // 设置超时处理（30秒后如果没有收到广播结果，则认为发送失败）
             smsTimeout = Runnable {
-                smsResult?.success(hashMapOf(
+                smsResult?.success(hashMapOf<String, Any>(
                     "success" to false,
                     "message" to "发送超时：可能被用户拒绝或系统异常",
                     "errorCode" to "TIMEOUT"
@@ -316,7 +381,7 @@ class MainActivity: FlutterActivity() {
             handler.postDelayed(smsTimeout!!, 30000) // 30秒超时
 
         } catch (e: Exception) {
-            result.success(hashMapOf(
+            result.success(hashMapOf<String, Any>(
                 "success" to false,
                 "message" to "发送失败：${e.message}",
                 "errorCode" to "SEND_ERROR"
@@ -338,7 +403,7 @@ class MainActivity: FlutterActivity() {
                     val subscriptionInfos = subscriptionManager.activeSubscriptionInfoList
 
                     subscriptionInfos?.forEach { subscriptionInfo ->
-                        val simCard = hashMapOf(
+                        val simCard = hashMapOf<String, Any>(
                             "subscriptionId" to subscriptionInfo.subscriptionId,
                             "displayName" to (subscriptionInfo.displayName?.toString() ?: ""),
                             "carrierName" to (subscriptionInfo.carrierName?.toString() ?: ""),
@@ -351,7 +416,7 @@ class MainActivity: FlutterActivity() {
             } else {
                 // 对于较旧的Android版本，返回默认SIM卡信息
                 val telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-                val simCard = hashMapOf(
+                val simCard = hashMapOf<String, Any>(
                     "subscriptionId" to -1,
                     "displayName" to "默认SIM卡",
                     "carrierName" to (telephonyManager.networkOperatorName ?: ""),
@@ -368,13 +433,147 @@ class MainActivity: FlutterActivity() {
     }
 
     /**
+     * 处理长短信发送状态
+     */
+    private fun handleMultipartSmsSent(intent: Intent?, resultCode: Int) {
+        val trackerId = intent?.getStringExtra("trackerId") ?: return
+        val partIndex = intent.getIntExtra("partIndex", -1)
+
+        val tracker = multipartSmsStatus[trackerId] ?: return
+
+        when (resultCode) {
+            Activity.RESULT_OK -> {
+                tracker.sentParts++
+                sendSmsStatusToFlutter("sending",
+                    "长短信发送中 (${tracker.sentParts}/${tracker.totalParts})",
+                    true,
+                    hashMapOf<String, Any>(
+                        "isMultipart" to true,
+                        "sentParts" to tracker.sentParts,
+                        "totalParts" to tracker.totalParts,
+                        "trackerId" to trackerId
+                    )
+                )
+            }
+            else -> {
+                tracker.failedParts++
+                sendSmsStatusToFlutter("failed",
+                    "长短信第${partIndex + 1}段发送失败",
+                    false,
+                    hashMapOf<String, Any>(
+                        "isMultipart" to true,
+                        "failedParts" to tracker.failedParts,
+                        "totalParts" to tracker.totalParts,
+                        "trackerId" to trackerId
+                    )
+                )
+            }
+        }
+
+        // 检查是否所有段都已处理
+        if (tracker.sentParts + tracker.failedParts >= tracker.totalParts) {
+            // 取消超时任务
+            smsTimeout?.let { handler.removeCallbacks(it) }
+            smsTimeout = null
+
+            val success = tracker.failedParts == 0
+            val statusMessage = if (success) {
+                "长短信发送成功 (${tracker.totalParts}段)"
+            } else {
+                "长短信发送完成，${tracker.failedParts}段失败"
+            }
+
+            sendSmsStatusToFlutter(
+                if (success) "sent" else "failed",
+                statusMessage,
+                success,
+                hashMapOf<String, Any>(
+                    "isMultipart" to true,
+                    "sentParts" to tracker.sentParts,
+                    "failedParts" to tracker.failedParts,
+                    "totalParts" to tracker.totalParts,
+                    "trackerId" to trackerId
+                )
+            )
+
+            smsResult?.success(hashMapOf<String, Any>(
+                "success" to success,
+                "message" to statusMessage,
+                "status" to if (success) "sent" else "failed",
+                "isMultipart" to true,
+                "sentParts" to tracker.sentParts,
+                "failedParts" to tracker.failedParts,
+                "totalParts" to tracker.totalParts
+            ))
+            smsResult = null
+
+            // 清理跟踪器
+            multipartSmsStatus.remove(trackerId)
+        }
+    }
+
+    /**
+     * 处理长短信送达状态
+     */
+    private fun handleMultipartSmsDelivered(intent: Intent?, resultCode: Int) {
+        val trackerId = intent?.getStringExtra("trackerId") ?: return
+        val partIndex = intent.getIntExtra("partIndex", -1)
+
+        val tracker = multipartSmsStatus[trackerId] ?: return
+
+        when (resultCode) {
+            Activity.RESULT_OK -> {
+                tracker.deliveredParts++
+                sendSmsStatusToFlutter("delivering",
+                    "长短信送达中 (${tracker.deliveredParts}/${tracker.totalParts})",
+                    true,
+                    hashMapOf<String, Any>(
+                        "isMultipart" to true,
+                        "deliveredParts" to tracker.deliveredParts,
+                        "totalParts" to tracker.totalParts,
+                        "trackerId" to trackerId
+                    )
+                )
+
+                // 检查是否所有段都已送达
+                if (tracker.deliveredParts >= tracker.totalParts) {
+                    sendSmsStatusToFlutter("delivered",
+                        "长短信全部送达 (${tracker.totalParts}段)",
+                        true,
+                        hashMapOf<String, Any>(
+                            "isMultipart" to true,
+                            "deliveredParts" to tracker.deliveredParts,
+                            "totalParts" to tracker.totalParts,
+                            "trackerId" to trackerId
+                        )
+                    )
+                }
+            }
+            else -> {
+                sendSmsStatusToFlutter("delivery_failed",
+                    "长短信第${partIndex + 1}段送达失败",
+                    false,
+                    hashMapOf<String, Any>(
+                        "isMultipart" to true,
+                        "partIndex" to partIndex,
+                        "trackerId" to trackerId
+                    )
+                )
+            }
+        }
+    }
+
+    /**
      * 向Flutter发送短信状态更新
      */
-    private fun sendSmsStatusToFlutter(status: String, message: String, success: Boolean) {
-        methodChannel.invokeMethod("onSmsStatusChanged", hashMapOf(
+    private fun sendSmsStatusToFlutter(status: String, message: String, success: Boolean, extraData: Map<String, Any> = emptyMap()) {
+        val data = hashMapOf<String, Any>(
             "status" to status,
             "message" to message,
             "success" to success
-        ))
+        )
+        data.putAll(extraData)
+
+        methodChannel.invokeMethod("onSmsStatusChanged", data)
     }
 }

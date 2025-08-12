@@ -4,8 +4,6 @@ import '../modules/layout/bindings/layout_binding.dart';
 import '../modules/layout/views/layout_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
-import '../modules/tasks/bindings/tasks_binding.dart';
-import '../modules/tasks/views/tasks_view.dart';
 import '../modules/settings/bindings/settings_binding.dart';
 import '../modules/settings/views/settings_view.dart';
 import '../modules/statistics/bindings/statistics_binding.dart';

@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import '../controllers/layout_controller.dart';
 import '../../home/views/home_view.dart';
-import '../../tasks/views/tasks_view.dart';
 import '../../statistics/views/statistics_view.dart';
 
 class LayoutView extends GetView<LayoutController> {
